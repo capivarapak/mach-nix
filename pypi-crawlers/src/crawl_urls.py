@@ -10,6 +10,7 @@ import requests
 import utils
 from bucket_dict import LazyBucketDict
 from requests import HTTPError
+import json
 
 base_url = "https://pypi.org/pypi"
 session = requests.Session()
@@ -34,6 +35,7 @@ def all_packages():
 
 def pkg_meta(name):
     resp = session.get(f"{base_url}/{name}/json", headers=headers)
+    print(f"{base_url}/{name}/json")
     resp.raise_for_status()
     return resp.json()
 
@@ -91,7 +93,24 @@ def save_pkg_meta(name, pkgs_dict):
                 for wheel in wheels
             }
     if releases_dict:
-        pkgs_dict[name.replace('_', '-').lower()] = releases_dict
+        pkgs_dict[name.replace('_', '-').lower()] = meta
+    from pathlib import Path
+    pppname = name.replace('_', '-').lower()
+    pppname1 = "-"
+    pppname2 = "-"
+    if len(pppname) > 2:
+        pppname1 = pppname[0]
+        pppname2 = pppname[1]
+    elif len(pppname) > 1:
+        pppname1 = pppname[0]
+    
+
+    ppp = "json-packages/" + pppname1 + "/" + pppname2
+    Path(ppp).mkdir(parents=True, exist_ok=True)
+
+    f = open(ppp + "/" + pppname + ".json", "w")
+    f.write(json.dumps(meta))
+    f.close()
 
 
 def crawl_pkgs_meta(packages, target_dir, workers):
